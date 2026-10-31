@@ -1,0 +1,38 @@
+<%@ page pageEncoding="UTF-8" %>
+<%-- Tarjeta de un coche. Espera las variables "coche" (c:forEach var="coche") y "volver" (página de vuelta). --%>
+<c:url var="urlFicha" value="/coche"><c:param name="bastidor" value="${coche.bastidor}"/></c:url>
+<article class="tarjeta">
+    <div class="tarjeta-foto">
+        <img src="<c:url value='/fotos/${coche.imagen}'/>" alt="<c:out value='${coche.nombreCompleto}'/>" loading="lazy">
+        <c:choose>
+            <c:when test="${not coche.disponible}"><span class="tarjeta-sello vendido">Vendido</span></c:when>
+            <c:otherwise><span class="tarjeta-sello"><c:out value="${coche.anio}"/></span></c:otherwise>
+        </c:choose>
+        <sec:authorize access="hasRole('CLIENTE')">
+            <c:set var="esFavorito" value="${favoritos.contains(coche.bastidor) or volver == 'favoritos'}"/>
+            <form method="post" action="<c:url value='${esFavorito ? "/favorito-quitar" : "/favorito-anadir"}'/>" class="tarjeta-fav">
+                <input type="hidden" name="${_csrf.parameterName}" value="${_csrf.token}">
+                <input type="hidden" name="bastidor" value="<c:out value='${coche.bastidor}'/>">
+                <input type="hidden" name="volver" value="${volver}">
+                <button type="submit" class="boton-fav ${esFavorito ? 'activo' : ''}"
+                        aria-label="${esFavorito ? 'Quitar de favoritos' : 'Añadir a favoritos'}"
+                        title="${esFavorito ? 'Quitar de favoritos' : 'Añadir a favoritos'}">
+                    <svg class="ico"><use href="#i-corazon"/></svg>
+                </button>
+            </form>
+        </sec:authorize>
+    </div>
+    <div class="tarjeta-cuerpo">
+        <span class="etiqueta tarjeta-marca"><c:out value="${coche.marca}"/></span>
+        <h3 class="tarjeta-modelo"><a href="${urlFicha}"><c:out value="${coche.modelo}"/></a></h3>
+        <div class="datos">
+            <span><svg class="ico ico-sm"><use href="${coche.motor == 'ELECTRICO' ? '#i-rayo' : '#i-motor'}"/></svg><c:out value="${coche.motor.etiqueta}"/></span>
+            <span><svg class="ico ico-sm"><use href="#i-cambio"/></svg><c:out value="${coche.cambio.etiqueta}"/></span>
+            <span><svg class="ico ico-sm"><use href="#i-potencia"/></svg><c:out value="${coche.potenciaCv}"/> CV</span>
+        </div>
+        <div class="tarjeta-pie">
+            <span class="precio"><fmt:formatNumber value="${coche.precio}" type="currency" currencyCode="EUR" maxFractionDigits="0"/></span>
+            <span class="ir">Ver ficha <svg class="ico ico-sm"><use href="#i-flecha"/></svg></span>
+        </div>
+    </div>
+</article>

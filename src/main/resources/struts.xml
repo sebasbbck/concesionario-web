@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE struts PUBLIC
+        "-//Apache Software Foundation//DTD Struts Configuration 6.5//EN"
+        "https://struts.apache.org/dtds/struts-6.5.dtd">
+<!--
+  Configuración de Struts 2: qué Action atiende cada URL y a qué JSP va cada resultado.
+  Flujo: petición -> filtro de Struts -> interceptores -> Action -> resultado (JSP o redirección).
+  Las Actions las crea Spring (struts2-spring-plugin) e inyecta los servicios por constructor.
+-->
+<struts>
+    <constant name="struts.objectFactory.spring.autoWire" value="constructor"/>
+    <!-- URLs sin ".action" (/catalogo), las mismas que protege SecurityConfig -->
+    <constant name="struts.action.extension" value=","/>
+    <!-- Rutas que no son de Struts: las atiende Spring MVC (API REST, fotos, estáticos, errores) -->
+    <constant name="struts.action.excludePattern" value="/,/api/.*,/fotos/.*,/css/.*,/js/.*,/img/.*,/error,/favicon\.ico"/>
+    <constant name="struts.ui.theme" value="simple"/>
+    <constant name="struts.i18n.encoding" value="UTF-8"/>
+    <constant name="struts.locale" value="es_ES"/>
+    <constant name="struts.devMode" value="false"/>
+    <constant name="struts.enable.DynamicMethodInvocation" value="false"/>
+    <!-- Struts 7 solo deja que OGNL (tags s:*, parámetros) acceda a clases permitidas, además de las Actions.
+         Se permiten únicamente los paquetes propios de modelo y formularios. -->
+    <constant name="struts.allowlist.packageNames"
+              value="com.sebas.concesionario.modelo,com.sebas.concesionario.web.struts"/>
+
+    <package name="base" extends="struts-default" abstract="true">
+        <interceptors>
+            <interceptor name="soloPost" class="com.sebas.concesionario.web.struts.SoloPostInterceptor"/>
+
+            <!-- "store" guarda los mensajes (addActionMessage/addActionError) en sesión al redirigir,
+                 para mostrarlos en la página siguiente (patrón Post/Redirect/Get).
+                 Va DESPUÉS de defaultStack: si recuperase los errores antes que "workflow", este los
+                 tomaría por errores de validación y devolvería "input" en la página de destino. -->
+            <interceptor-stack name="pilaApp">
+                <interceptor-ref name="defaultStack"/>
+                <interceptor-ref name="store">
+                    <param name="operationMode">AUTOMATIC</param>
+                </interceptor-ref>
+            </interceptor-stack>
+
+            <!-- Para las Actions que modifican datos: solo POST (y por tanto con token CSRF) -->
+            <interceptor-stack name="pilaPost">
+                <interceptor-ref name="soloPost"/>
+                <interceptor-ref name="pilaApp"/>
+            </interceptor-stack>
+        </interceptors>
+
+        <default-interceptor-ref name="pilaApp"/>
+
+        <global-results>
+            <result name="noEncontrado">/WEB-INF/jsp/no-encontrado.jsp</result>
+        </global-results>
+    </package>
+
+    <!-- ===================== Parte pública y del cliente ===================== -->
+    <package name="publico" namespace="/" extends="base">
+
+        <action name="catalogo" class="com.sebas.concesionario.web.struts.CatalogoAction">
+            <result>/WEB-INF/jsp/catalogo.jsp</result>
+        </action>
+
+        <action name="coche" class="com.sebas.concesionario.web.struts.CocheAction">
+            <result>/WEB-INF/jsp/coche.jsp</result>
+        </action>
+
+        <action name="login" class="com.sebas.concesionario.web.struts.LoginAction">
+            <result>/WEB-INF/jsp/login.jsp</result>
+            <result name="yaLogueado" type="redirectAction">catalogo</result>
+        </action>
+
+        <action name="registro" class="com.sebas.concesionario.web.struts.RegistroAction" method="input">
+            <result name="input">/WEB-INF/jsp/registro.jsp</result>
+        </action>
+
+        <action name="registrar" class="com.sebas.concesionario.web.struts.RegistroAction">
+            <interceptor-ref name="pilaPost"/>
+            <result name="input">/WEB-INF/jsp/registro.jsp</result>
+            <result type="redirectAction">login</result>
+        </action>
+
+        <action name="favoritos" class="com.sebas.concesionario.web.struts.FavoritoAction" method="listar">
+            <result>/WEB-INF/jsp/favoritos.jsp</result>
+        </action>
+
+        <action name="favorito-anadir" class="com.sebas.concesionario.web.struts.FavoritoAction" method="anadir">
+            <interceptor-ref name="pilaPost"/>
+            <result name="coche" type="redirectAction">
+                <param name="actionName">coche</param>
+                <param name="bastidor">${bastidor}</param>
+            </result>
+            <result name="catalogo" type="redirectAction">catalogo</result>
+            <result name="favoritos" type="redirectAction">favoritos</result>
+        </action>
+
+        <action name="favorito-quitar" class="com.sebas.concesionario.web.struts.FavoritoAction" method="quitar">
+            <interceptor-ref name="pilaPost"/>
+            <result name="coche" type="redirectAction">
+                <param name="actionName">coche</param>
+                <param name="bastidor">${bastidor}</param>
+            </result>
+            <result name="catalogo" type="redirectAction">catalogo</result>
+            <result name="favoritos" type="redirectAction">favoritos</result>
+        </action>
+
+        <action name="comprar" class="com.sebas.concesionario.web.struts.CompraAction" method="confirmar">
+            <result name="input">/WEB-INF/jsp/comprar.jsp</result>
+            <result name="coche" type="redirectAction">
+                <param name="actionName">coche</param>
+                <param name="bastidor">${bastidor}</param>
+            </result>
+        </action>
+
+        <action name="comprar-confirmar" class="com.sebas.concesionario.web.struts.CompraAction" method="comprar">
+            <interceptor-ref name="pilaPost"/>
+            <result type="redirectAction">mis-compras</result>
+            <result name="coche" type="redirectAction">
+                <param name="actionName">coche</param>
+                <param name="bastidor">${bastidor}</param>
+            </result>
+        </action>
+
+        <action name="mis-compras" class="com.sebas.concesionario.web.struts.CompraAction" method="misCompras">
+            <result>/WEB-INF/jsp/mis-compras.jsp</result>
+        </action>
+    </package>
+
+    <!-- ===================== Administración (rol ADMIN, ver SecurityConfig) ===================== -->
+    <package name="admin" namespace="/admin" extends="base">
+
+        <action name="coches" class="com.sebas.concesionario.web.struts.admin.AdminCocheAction" method="listar">
+            <result>/WEB-INF/jsp/admin/coches.jsp</result>
+        </action>
+
+        <action name="coche-nuevo" class="com.sebas.concesionario.web.struts.admin.AdminCocheAction" method="nuevo">
+            <result name="input">/WEB-INF/jsp/admin/coche-form.jsp</result>
+        </action>
+
+        <action name="coche-editar" class="com.sebas.concesionario.web.struts.admin.AdminCocheAction" method="editar">
+            <result name="input">/WEB-INF/jsp/admin/coche-form.jsp</result>
+        </action>
+
+        <action name="coche-guardar" class="com.sebas.concesionario.web.struts.admin.AdminCocheAction" method="guardar">
+            <interceptor-ref name="pilaPost"/>
+            <result name="input">/WEB-INF/jsp/admin/coche-form.jsp</result>
+            <result type="redirectAction">coches</result>
+        </action>
+
+        <action name="coche-borrar" class="com.sebas.concesionario.web.struts.admin.AdminCocheAction" method="borrar">
+            <interceptor-ref name="pilaPost"/>
+            <result type="redirectAction">coches</result>
+        </action>
+    </package>
+</struts>

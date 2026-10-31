@@ -1,0 +1,42 @@
+<%@ page pageEncoding="UTF-8" %>
+</main>
+<footer class="pie">
+    <div class="contenedor">
+        <div class="pie-columnas">
+            <div>
+                <a class="logo" href="<c:url value='/catalogo'/>">CAR<span>4</span>U</a>
+                <p class="mt-3 mb-0" style="max-width: 34ch">Coches seleccionados, con todos los datos a la vista y compra en dos pasos.</p>
+            </div>
+            <div>
+                <h3>Explorar</h3>
+                <ul>
+                    <li><a href="<c:url value='/catalogo'/>">Catálogo completo</a></li>
+                    <li><a href="<c:url value='/catalogo?motor=ELECTRICO'/>">Eléctricos</a></li>
+                    <li><a href="<c:url value='/catalogo?motor=HIBRIDO'/>">Híbridos</a></li>
+                </ul>
+            </div>
+            <div>
+                <h3>Tu cuenta</h3>
+                <ul>
+                    <li><a href="<c:url value='/favoritos'/>">Favoritos</a></li>
+                    <li><a href="<c:url value='/mis-compras'/>">Mis compras</a></li>
+                    <li><a href="<c:url value='/registro'/>">Crear cuenta</a></li>
+                </ul>
+            </div>
+            <div>
+                <h3>Hecho con</h3>
+                <div class="tecnologias">
+                    <span>Java 21</span><span>Spring Boot</span><span>Struts 2</span><span>JSP</span>
+                    <span>JDBC</span><span>MySQL</span><span>Tomcat</span>
+                </div>
+            </div>
+        </div>
+        <div class="pie-legal">
+            <span>Car4U · Proyecto de portfolio de Sebastián Coello</span>
+            <span>Datos de demostración</span>
+        </div>
+    </div>
+</footer>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

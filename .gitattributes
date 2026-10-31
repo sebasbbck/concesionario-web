@@ -1,0 +1,13 @@
+# Normalizar finales de línea en el repositorio
+* text=auto
+
+# Scripts: el de Unix siempre con LF (si no, falla en Linux/macOS), el de Windows con CRLF
+mvnw        text eol=lf
+*.sh        text eol=lf
+*.cmd       text eol=crlf
+
+# Binarios
+*.jpg binary
+*.png binary
+*.war binary
+*.jar binary
